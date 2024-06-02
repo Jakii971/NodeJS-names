@@ -1,14 +1,13 @@
 const mysql = require('mysql');
 const dotenv = require('dotenv');
-
 dotenv.config();
 
 const connection = mysql.createConnection({
     host: process.env.HOST,
-    user: process.env.USERNAME,
+    user: process.env.USER,
     password: process.env.PASSWORD,
     database: process.env.DATABASE,
-    port: process.env.DB_PORT,
+    port: process.env.DB_PORT
 })
 
 let instance = null;
@@ -17,49 +16,46 @@ connection.connect((err) => {
     if (err){
         console.log(err.message);
     }
-    // console.log('db' + connection.state);
-})
+    console.log('db ' + connection.state);
+});
 
 class DbService {
     static getDbServiceInstance(){
         return instance ? instance : new DbService();
     }
 
-    async getAllData(){loadHTMLTable
+    async getAllData(){
         try{
             const response = await new Promise((resolve, reject) =>{
                 const query = 'SELECT * FROM names;';
 
-                connection.query(query, (err,result) => {
-                    if(err) {
-                        reject(new Error(err.message));
-                    }
-                    resolve(result); //!ini baru ditambah
+                connection.query(query, (err,results) => {
+                    if(err) reject(new Error(err.message));
+                    resolve(results);
                 });
             });
             return response;
         } catch(error){
             console.log(error);
+            return[];
         }
     }
     async insertNewName(name){
         try{
             const dateAdded = new Date();
-            const result = await new Promise((resolve, reject) =>{
+            const insertId = await new Promise((resolve, reject) =>{
                 const query = 'INSERT INTO names (name, date_added) VALUES (?,?)';
 
                 connection.query(query, [name, dateAdded],(err,result) => {
                     if(err) reject(new Error(err.message));
-                    // resolve(result.insertId);
-                    resolve(result);
-                })
+                    resolve(result.insertId);
+                });
             });
-            return { insertId: result.insertId, name: name, dateAdded: dateAdded };
-            // return {
-            //     id: insertId,
-            //     name: name,
-            //     dateAdded: dateAdded
-            // }
+            return {
+                id: insertId,
+                name: name,
+                dateAdded: dateAdded
+            };
         } catch(error){
             console.log(error);
             return null;
@@ -73,12 +69,10 @@ class DbService {
 
                 connection.query(query, [id], (err, result) => {
                     if(err) reject(new Error(err.message));
-                    resolve(result.affectedRows > 0);
-                    // resolve(result);
-                })
+                    resolve(result.affectedRows);
+                });
             });
-            return response;
-            // return response === 1 ? true : false;
+            return response === 1;
         } catch(error){
             console.log(error);
             return false;
@@ -92,12 +86,10 @@ class DbService {
 
                 connection.query(query, [name, id], (err, result) => {
                     if(err) reject(new Error(err.message));
-                    resolve(result.affectedRows > 0);
-                    // resolve(result.affectedRows);
-                })
+                    resolve(result.affectedRows);
+                });
             });
-            // return response === 1 ? true : false;
-            return response;
+            return response === 1;
         } catch(error){
             console.log(error);
             return false;
@@ -106,12 +98,12 @@ class DbService {
     async searchByName(name){
         try{
             const response = await new Promise((resolve, reject) =>{
-                const query = 'SELECT * FROM names WHERE name = ?;';
+                const query = 'SELECT * FROM names WHERE name LIKE ?;';
 
-                connection.query(query, [name], (err, result) => {
+                connection.query(query, [`%${name}%`], (err, result) => {
                     if(err) reject(new Error(err.message));
                     resolve(result);
-                })
+                });
             });
             return response;
         } catch(error){
