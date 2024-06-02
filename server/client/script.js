@@ -1,7 +1,12 @@
+let tableData = [];
+
 document.addEventListener('DOMContentLoaded', function(){
     fetch('http://localhost:5000/getAll')
         .then(response => response.json())
-        .then(data => loadHTMLTable(data.data));
+        .then(data => {
+            tableData = data.data;
+            loadHTMLTable(tableData);
+        });
 
     document.querySelector('table tbody').addEventListener('click', function(event){
         if(event.target.className === "delete-row-btn"){
@@ -29,6 +34,11 @@ function handleEditRow(id){
     const updateSection = document.querySelector('#update-row');
     updateSection.hidden = false;
     document.querySelector('#update-row-btn').dataset.id = id;
+
+    const selectedData = tableData.find(row => row.id == id);
+    if (selectedData) {
+        document.querySelector('#update-name-input').value = selectedData.name;
+    }
 }
 
 const updateBtn = document.querySelector('#update-row-btn');
@@ -121,15 +131,9 @@ function loadHTMLTable(data){
         tableHtml += `<td>${id}</td>`;
         tableHtml += `<td>${name}</td>`;
         tableHtml += `<td>${new Date(date_added).toLocaleString()}</td>`;
-        tableHtml += `<td><button class="delete-row-btn" data-id=${id}>Delete</td>`;
-        tableHtml += `<td><button class="edit-row-btn" data-id=${id}>Edit</td>`;
+        tableHtml += `<td><button class="delete-row-btn" data-id=${id}>Delete</button></td>`;
+        tableHtml += `<td><button class="edit-row-btn" data-id=${id}>Edit</button></td>`; //!!!!!!!!!!!!!!!!!!!!!!!
         tableHtml += "</tr>";
     });
     table.innerHTML = tableHtml;
 }
-
-// document.querySelector('table tbody').addEventListener('click', function(event){
-//     if (event.target.className === "delete-row-btn"){
-//         deleteRowById(event.target.dataset.id);
-//     }
-// });
